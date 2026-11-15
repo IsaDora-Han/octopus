@@ -261,6 +261,12 @@
     .office{aspect-ratio:900/735}
     .actor{width:clamp(34px,10.6cqw,62px)}
     .bubble{display:none}
+    .actor.peek .bubble{display:block;width:clamp(120px,42cqw,178px);padding:6px 8px 7px}
+    .actor.peek .b-more{display:none}
+    .actor.peek .dot{display:none}
+    .actor.peek .b-text{font-size:clamp(10px,3cqw,12px)}
+    .actor.peek .b-name{font-size:10px}
+    .actor.peek .b-role{font-size:8.6px}
     .actor.active .bubble{display:block;width:clamp(158px,54cqw,236px);padding:8px 10px 9px}
     .actor.active .b-name{font-size:11px}
     .actor.active .b-role{font-size:9px}
@@ -955,6 +961,7 @@
 
   var actorsEl = document.getElementById("actors");
   var officeEl = document.getElementById("office");
+  var mqMobile = window.matchMedia("(max-width: 640px)");
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
 
@@ -978,22 +985,36 @@
       '<span class="dot"></span>'+
       '<div class="fig">'+FIG[a.id]+'</div>';
 
-    el.addEventListener("click", function(){
+    function activate(force){
       var on = el.classList.contains("active");
       document.querySelectorAll(".actor.active").forEach(function(n){ n.classList.remove("active"); });
+      document.querySelectorAll(".actor.peek").forEach(function(n){ n.classList.remove("peek"); });
       officeEl.classList.remove("has-active");
-      if(!on){
+      if(force || !on){
         el.classList.add("active");
         officeEl.classList.add("has-active");
         var t = el.querySelector(".b-text");
         t.textContent = a.status[0];
+      } else if(mqMobile.matches){
+        el.classList.add("peek");
       }
-    });
+    }
+    el.addEventListener("click", function(){ activate(false); });
     el.addEventListener("keydown", function(e){
       if(e.key === "Enter" || e.key === " "){ e.preventDefault(); el.click(); }
     });
     actorsEl.appendChild(el);
   });
+
+  // 좁은 화면에서는 비서실장 말풍선을 하나 띄워 둔다
+  function applyMobileDefault(){
+    if(!mqMobile.matches) return;
+    if(document.querySelector(".actor.active, .actor.peek")) return;
+    var first = document.querySelector('.actor[data-id="spongebob"]');
+    if(first) first.classList.add("peek");
+  }
+  applyMobileDefault();
+  if(mqMobile.addEventListener) mqMobile.addEventListener("change", applyMobileDefault);
 
   // 말풍선 상태 순환
   var idx = 0;
